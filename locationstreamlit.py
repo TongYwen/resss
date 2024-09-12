@@ -5,10 +5,17 @@ import numpy as np
 from streamlit_folium import st_folium
 import folium
 
-# Initialize the Google Maps client with your API key
-API_KEY = 'AIzaSyDK7boLSVOjAK2lPx6NoOrBYPaXLpCAUoA'
+# Try to get API key from Streamlit secrets (for deployment)
+try:
+    API_KEY = st.secrets["googlemaps"]["api_key"]
+except KeyError:
+    # Fallback to hardcoded API key for local testing (don't forget to remove this for production)
+    API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY'  # Replace with your actual Google Maps API key
+
+# Initialize the Google Maps client
 gmaps = googlemaps.Client(key=API_KEY)
 
+# Function to get Google Maps autocomplete suggestions
 def get_autocomplete_suggestions(input_text):
     try:
         suggestions = gmaps.places_autocomplete(input_text)
@@ -17,6 +24,7 @@ def get_autocomplete_suggestions(input_text):
         st.error(f"Error fetching autocomplete suggestions: {e}")
         return []
 
+# Function to get latitude and longitude of an address
 def get_lat_long(address):
     try:
         geocode_result = gmaps.geocode(address)
@@ -28,6 +36,7 @@ def get_lat_long(address):
         st.error(f"Error fetching latitude and longitude: {e}")
     return None
 
+# Haversine formula to calculate distance between two points
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371  # Earth radius in kilometers
     phi1, phi2 = np.radians(lat1), np.radians(lat2)
@@ -38,13 +47,17 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
     return R * c
 
+# Function to find nearby restaurants within a given distance
 def find_nearby_restaurants(lat, lng, df, max_distance_km=5):
     df['distance'] = df.apply(lambda row: haversine(lat, lng, row['latitude'], row['longitude']), axis=1)
     nearby_restaurants = df[df['distance'] <= max_distance_km]
     return nearby_restaurants
 
-# Load your dataset with restaurant name, address, URL, latitude, and longitude
-df_with_lat_lon = pd.read_excel('df_with_lat_lon.xlsx')
+# Load dataset with restaurant information
+try:
+    df_with_lat_lon = pd.read_excel('df_with_lat_lon.xlsx')
+except Exception as e:
+    st.error(f"Error loading the dataset: {e}")
 
 # Streamlit application interface
 st.title("Nearby Restaurant Finder with Map")
@@ -56,7 +69,7 @@ if user_input:
     suggestions = get_autocomplete_suggestions(user_input)
     
     if suggestions:
-        selected_address = suggestions[0] 
+        selected_address = st.selectbox("Choose an address:", suggestions)
         
         if selected_address:
             coordinates = get_lat_long(selected_address)
@@ -72,7 +85,7 @@ if user_input:
                     st.write("Restaurants within 5 km:")
                     st.dataframe(nearby_restaurants[['name', 'latitude', 'longitude', 'distance', 'url']])
                     
-                    # Displaying map using folium
+                    # Display map using folium
                     m = folium.Map(location=[coordinates[0], coordinates[1]], zoom_start=13)
                     
                     # Add a marker for the selected location
@@ -93,4 +106,4 @@ if user_input:
             else:
                 st.error("Could not fetch coordinates for the selected location.")
     else:
-        st.error("No suggestions found.")
+        st.error("No suggestions found. Please try again.")
