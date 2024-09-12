@@ -5,12 +5,11 @@ import numpy as np
 from streamlit_folium import st_folium
 import folium
 
-# Try to get API key from Streamlit secrets (for deployment)
 try:
     API_KEY = st.secrets["googlemaps"]["api_key"]
 except KeyError:
     # Fallback to hardcoded API key for local testing (don't forget to remove this for production)
-    API_KEY = 'AIzaSyDK7boLSVOjAK2lPx6NoOrBYPaXLpCAUoA'  # Replace with your actual Google Maps API key
+    API_KEY = 'AIzaSyDK7boLSVOjAK2lPx6NoOrBYPaXLpCAUoA'  
 
 # Initialize the Google Maps client
 gmaps = googlemaps.Client(key=API_KEY)
