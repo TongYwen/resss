@@ -10,7 +10,7 @@ try:
     API_KEY = st.secrets["googlemaps"]["api_key"]
 except KeyError:
     # Fallback to hardcoded API key for local testing (don't forget to remove this for production)
-    API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY'  # Replace with your actual Google Maps API key
+    API_KEY = 'AIzaSyDK7boLSVOjAK2lPx6NoOrBYPaXLpCAUoA'  # Replace with your actual Google Maps API key
 
 # Initialize the Google Maps client
 gmaps = googlemaps.Client(key=API_KEY)
